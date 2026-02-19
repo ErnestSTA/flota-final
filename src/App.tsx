@@ -42,6 +42,7 @@ type AppStep = 'start' | 'mode_selection' | 'contact_details' | 'form' | 'succes
 function App() {
   const [step, setStep] = useState<AppStep>('start');
   const [plate, setPlate] = useState('WI 17009');
+  const [fleetId, setFleetId] = useState<string | null>(null); // Dodany stan dla parametru fleet
   const [desc, setDesc] = useState('');
   const [photo, setPhoto] = useState<Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -53,10 +54,18 @@ function App() {
     rodo3: false
   });
 
+  // Zaktualizowany useEffect odczytujący oba parametry z URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const qrPlate = params.get('plate');
-    if (qrPlate) setPlate(qrPlate);
+    const urlPlate = params.get('plate');
+    const urlFleet = params.get('fleet');
+
+    if (urlPlate) {
+      setPlate(urlPlate);
+    }
+    if (urlFleet) {
+      setFleetId(urlFleet);
+    }
   }, []);
 
   const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,6 +79,12 @@ function App() {
   const handleSubmit = async () => {
     try {
       let fullDescription = desc;
+      
+      // Jeśli mamy fleetId z URL, możemy go opcjonalnie dopisać do opisu, żeby był ślad w bazie
+      if (fleetId) {
+        fullDescription = `[Flota ID: ${fleetId}]\n${fullDescription}`;
+      }
+
       if (contact.email || contact.phone) {
         fullDescription += `\n\n--- DANE KONTAKTOWE ---\nTel: ${contact.phone}\nEmail: ${contact.email}\nZgody: ${contact.rodo1 ? 'Tak' : 'Nie'}`;
       }
@@ -210,7 +225,7 @@ function App() {
       <CheckCircleIcon sx={{ fontSize: 100, color: '#D32F2F', mb: 2 }} />
       <Typography variant="h4" fontWeight="bold" gutterBottom>Dziękujemy</Typography>
       <Typography variant="body1" color="text.secondary">Zgłoszenie zostało wysłane</Typography>
-      <Button variant="outlined" sx={{ mt: 5 }} onClick={() => { setStep('start'); setPhoto(null); setDesc(''); setContact({phone:'', email:'', rodo1:false, rodo2:false, rodo3:false}); }}>
+      <Button variant="outlined" sx={{ mt: 5 }} onClick={() => { setStep('start'); setPhoto(null); setDesc(''); setContact({phone:'', email:'', rodo1:false, rodo2:false, rodo3:false}); setFleetId(null); }}>
         Nowe zgłoszenie
       </Button>
     </Box>
